@@ -9,3 +9,13 @@ export default Editable;
 ```
 ## export default vs export const
 - https://stackoverflow.com/questions/33611812/export-const-vs-export-default-in-es6
+
+
+## context 사용
+- 
+``` javascript
+import React, { createContext } from 'react';
+
+const defaultValue = 'light';
+const ThemeContext = React.createContext(defaultValue);
+```

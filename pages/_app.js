@@ -6,7 +6,7 @@ import { Provider } from 'next-auth/client';
 import theme from '../themes/theme';
 import { composeWrappers } from 'lib/composeWrappers';
 
-const App = ({ Component, pageProps, apollo }) => {
+const App = ({ Component, pageProps }) => {
   const Providers = composeWrappers([
     props => <ThemeProvider theme={theme}>{props.children}</ThemeProvider>,
     props => <Provider session={pageProps.session}>{props.children}</Provider>,
