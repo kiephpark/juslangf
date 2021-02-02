@@ -1,5 +1,7 @@
-import clsx from 'clsx';
+import React, { useState } from 'react';
+
 import { makeStyles, useTheme, withStyles} from '@material-ui/core/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
@@ -8,81 +10,32 @@ import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
-
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend} from 'recharts';
-import { useState } from 'react'
-import axios from "axios";
-import _ from "lodash";
-
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-
-//added component for appbar
-import React from 'react';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
-//==================================================================
 
-//applied Tmon font
-import CssBaseline from '@material-ui/core/CssBaseline';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend} from 'recharts';
+import _ from "lodash";
+import clsx from 'clsx';
 
-//added Guge component
-import Guage from './Guage';
+// components
+import TabPanel, { AntTab, AntTabs }  from 'components/TabPanel';
+import Guage from 'components/Guage';
+import Copyright from 'components/Copyright';
 
+// api
+import gamerank from 'api/gamerank';
 
-const AntTabs = withStyles({
-  root: {
-    borderBottom: '1px solid #e8e8e8',
-  },
-  indicator: {
-    backgroundColor: '#1890ff',
-  },
-})(Tabs);
-
-const AntTab = withStyles((theme) => ({
-  root: {
-    textTransform: 'none',
-    minWidth: 72,
-    fontWeight: theme.typography.fontWeightRegular,
-    marginRight: theme.spacing(4),
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-    ].join(','),
-    '&:hover': {
-      color: '#40a9ff',
-      opacity: 1,
-    },
-    '&$selected': {
-      color: '#1890ff',
-      fontWeight: theme.typography.fontWeightMedium,
-    },
-    '&:focus': {
-      color: '#40a9ff',
-    },
-  },
-  selected: {},
-}))((props) => <Tab disableRipple {...props} />);
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -119,7 +72,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-//added style for AppBar
 const useAppBarStyles = makeStyles({
   header: {
     backgroundColor: "#212F3C",
@@ -127,41 +79,6 @@ const useAppBarStyles = makeStyles({
     boxShadow: "5px 5px 5px 5px"
   }
 });
-
-//------------------------------------------------------------
-
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright @ '}
-      <Link color="inherit" href="#">
-        주슐랭의 그래서 싸냐고
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box p={3}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
 
 export default function StockInfo() {
   const theme = useTheme();
@@ -204,11 +121,23 @@ export default function StockInfo() {
   };
 
   const handleStock = () => {
-
+    gamerank.gevolution(data)
+    .then(res => {
+      if(res.status == 200){
+        if(res.data['status'] === "OK"){
+          setSearchList(res.data['data'])
+          console.log("data:", searchList);
+        }
+      }
+    })
+    .catch(e=>{
+      console.log(e)
+    }
+  )
   };
 
   const getStatus = (taskID, counter) => {
-    
+
   }
 
   const handleNaver = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import StockInfo from '../components/stockinfo/StockInfo';
+import StockInfo from 'containers/StockInfo';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';//applied Tmon font
 
 //applied Tmon font

@@ -1,3 +1,4 @@
+# 기본 정리
 ## next app 설치
 - 노드 설치
 - npm install -g yarn
