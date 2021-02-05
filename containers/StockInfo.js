@@ -139,10 +139,96 @@ export default function StockInfo() {
 
   const handleStock = () => {
     setNaverDone(false);
+    setFetchMe(false);
     console.log(stockName.split('('));
     stockvalue.stockName({"stock_name":stockName.split('(')[0]})
       .then(res => {
-        console.log('handleStock', res.data);
+        const sd = res.data;
+        console.log('handleStock', sd);
+        if(sd.status !== "PASS"){
+          setComment(sd.message);
+          setFetchMe(false);
+        } else {
+          setStockInfo({
+            'stock_code': sd.stock_code,
+            'stock_name': sd.stock_name,
+            '적정시총': sd.proper_value,
+            '현재시총': sd.cur_value,
+            'message': sd.message,
+          });
+          console.log(stockInfo);
+
+          let data = [];
+          for(const [key, value] of Object.entries(sd.finstate['분기']['매출액'])){
+            data.push({day:key, price: value});
+          }
+          setQuarterR(data);
+          console.log("r quarter: ", quarterR);
+          data = []
+          for(const [key, value] of Object.entries(sd.finstate['연기']['매출액'])){
+            data.push({day:key, price: value});
+          }
+          setYearR(data);
+          console.log("r year: ", yearR);
+          data = []
+          for(const [key, value] of Object.entries(sd.finstate['분기']['영업이익'])){
+            data.push({day:key, price: value});
+          }
+          setQuarterSales(data);
+          console.log("s quarter: ", quarterSales);
+
+          data = []
+          for(const [key, value] of Object.entries(sd.finstate['연기']['영업이익'])){
+            data.push({day:key, price: value});
+          }
+          setYearSales(data);
+          console.log("s year: ", yearSales);
+          
+          data = []
+          for(const [key, value] of Object.entries(sd.finstate['분기']['당기순이익'])){
+            data.push({day:key, price: value});
+          }
+          setQuarterP(data);
+          console.log("p quarter: ", quarterP);
+          data = []
+          for(const [key, value] of Object.entries(sd.finstate['연기']['당기순이익'])){
+            data.push({day:key, price: value});
+          }
+          setYearP(data);
+          console.log("p year: ", yearP);
+
+          switch(sd['message']){
+            case '개싸다' :
+              console.log('90')
+              setGuageScore(90)
+              break;
+            case '싸다' :
+              console.log('80')
+              setGuageScore(80)
+              break;
+            case '와우 싸다' :
+              console.log('70')
+              setGuageScore(70)
+              break;
+            case '적정 가격 상태' :
+              console.log('60')
+              setGuageScore(60)
+              break;
+            case '약간 비싸' :
+              console.log('50')
+              setGuageScore(50)
+              break;
+            case '개비싸. 고수의 영역입니다.' :
+              console.log('30')
+              setGuageScore(30)
+              break;
+            default :
+              console.log('10')
+              setGuageScore(10)
+          }
+
+          setFetchMe(true);
+        }
       })
       .catch( (e) => {
         console.log('handleStock', e);
@@ -150,9 +236,68 @@ export default function StockInfo() {
   };
 
   const getStatus = (taskID, counter) => {
+    setNaverDone(false);
+    setFetchMe(false);
+    stockvalue.getResult({"task_id": taskID})
+      .then(res => {
+        const data = res.data;
+        console.log(data);
+        if(data["task_status"] == 'SUCCESS'){
+          const result = res.data['task_result']
+          if(result['status'] == 'PASS'){
+            console.log(result['corps'])
+            let tempRows = []
+            result['corps'].forEach((item) => {
+              let row = {}
+              for(const [key, value] of Object.entries(item)){
+                if(key === 'proper_value') {
+                  value = Math.floor(value)
+                  row[key] = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }else if (key === 'proper_value'){
+                  value = Math.floor(value)
+                  row[key] = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
+                else{
+                  row[key] = value
+                }
+              }
+              tempRows.push(row)
+            })
+            let rows = _.uniqBy(tempRows, 'stock_name');
+            console.log(rows);
+            setReportValue(rows);
+            setNaverDone(true);
+            setComment("종목 분석이 완료되었습니다. 아래 표를 확인하세요.");
+          } else {
+            setComment("종목 분석이 정상적으로 수행되지 못했습니다. 다시 시도 해 주세요. 계속 문제 발생 시 알려 주세요.");
+          }
+        } else if (data["task_status"] == 'PENDING'){
+          console.log("keep trying.")
+          setComment(`종목을 분석 중입니다. 잠시만 기다려 주세요.[${counter + 1}]`)
+          setTimeout(getStatus, 1000, data['task_id'], counter + 1)
+        }
+      })
+      .catch( (e) => {
+        console.log('handleNaver', e);
+      });
   }
 
   const handleNaver = () => {
+    setNaverDone(false);
+    setFetchMe(false);
+
+    stockvalue.naverReport()
+      .then(res => {
+        if(res.data["status"] == "PASS")
+        {
+          console.log("task_id: ", res.data["task_id"]);
+          setTimeout(getStatus, 1000, res.data['task_id'], 0);
+          setComment("종목을 분석 중입니다. 잠시만 기다려 주세요.[0]");
+        }        
+      })
+      .catch( (e) => {
+        console.log('handleNaver', e);
+      });
   };
 
   return (
@@ -231,8 +376,8 @@ export default function StockInfo() {
                         <TableCell component="th" scope="row">
                           {row.stock_name}({row.stock_code})
                         </TableCell>
-                        <TableCell align="right">{row['적정시총']}</TableCell>
-                        <TableCell align="right">{row['현재시총']}</TableCell>
+                        <TableCell align="right">{row['proper_value']}</TableCell>
+                        <TableCell align="right">{row['cur_value']}</TableCell>
                         <TableCell align="right">{row['message']}</TableCell>
                         <TableCell align="right">{}</TableCell>
                       </TableRow>
