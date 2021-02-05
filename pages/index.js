@@ -1,18 +1,15 @@
 import React from 'react';
 import StockInfo from 'containers/StockInfo';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';//applied Tmon font
 
-//applied Tmon font
-const theme = createMuiTheme({
-  typography: {
-    fontFamily: 'TmonMonsori',
-  },
-});
+export default function Index( { test } ) {
 
-export default function Index() {
   return (
-    <MuiThemeProvider theme={theme}> {/*applied Tmon font*/}
-      <StockInfo />
-    </MuiThemeProvider>
+    <StockInfo />
   );
 }
+
+
+// export async function getServerSideProps(context) {
+
+//    return { props: { test } };
+// }

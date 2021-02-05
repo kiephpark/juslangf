@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 
 import { makeStyles, useTheme, withStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -32,8 +32,11 @@ import TabPanel, { AntTab, AntTabs }  from 'components/TabPanel';
 import Guage from 'components/Guage';
 import Copyright from 'components/Copyright';
 
+import { CorpContext } from 'contexts/CorpProvider';
+
 // api
-import gamerank from 'api/gamerank';
+import finstate from 'api/finstate';
+import stockvalue from 'api/stockvalue';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -82,21 +85,16 @@ const useAppBarStyles = makeStyles({
 export default function StockInfo() {
   const theme = useTheme();
   const classes = useStyles();
-  const classes2 = useAppBarStyles(); //added for AppBar
+  const classes2 = useAppBarStyles();
+  const { corpList, handleCorpList } = useContext(CorpContext);
 
+  const [ comment, setComment] = useState('종목이름을 입력하고, 분석을 누르세요.');
   const [ stockInfo, setStockInfo] = useState(null);
   const [ fetchMe, setFetchMe] = useState(false);
-  const [ naverDone, setNaverDone] = useState(false);
   const [ stockName, setStockName] = useState("");
+  const [ naverDone, setNaverDone] = useState(false);
   const [ reportValue, setReportValue] = useState([]);
-  const [ comment, setComment] = useState('종목이름을 입력하고, 분석을 누르세요.');
   const [ value, setValue] = React.useState(0);
-  const [ data, setData] = React.useState([]);
-
-  let config = {
-    headers: {
-    }
-  }
   const [ quarterR, setQuarterR] = useState([]);
   const [ yearR, setYearR] = useState([]);
   const [ quarterSales, setQuarterSales] = useState([]);
@@ -105,42 +103,56 @@ export default function StockInfo() {
   const [ yearP, setYearP] = useState([]);
   const [guageScore, setGuageScore] = useState(0);
 
-  // if(loading && !data){
-  //   return (
-  //     <>
-  //       <Backdrop className={classes.backdrop} open={loading}>
-  //         <CircularProgress color="inherit" />
-  //       </Backdrop>
-  //     </>
-  //   );
-  // }
+  useEffect(()=>{
+    finstate.getCorps()
+     .then(res => {
+        const data = res.data;
+        console.log(data);
+        if(data.status === 'PASS'){
+          if(corpList.length === 0){
+            handleCorpList(data.data);
+          }
+        }
+        else{
+          console.log("백엔드 에러 발생 ", data.message)
+        }
+     })
+     .catch((e)=> {
+       console.log("e: ", e);
+     });
+  }, []);
 
+  if(corpList.length === 0){
+    return (
+      <>
+        <Backdrop className={classes.backdrop} open={corpList.length === 0}>
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      </>
+    );
+  }
+
+  // chart tab관련
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
   const handleStock = () => {
-    gamerank.gevolution(data)
-    .then(res => {
-      if(res.status == 200){
-        if(res.data['status'] === "OK"){
-          setSearchList(res.data['data'])
-          console.log("data:", searchList);
-        }
-      }
-    })
-    .catch(e=>{
-      console.log(e)
-    }
-  )
+    setNaverDone(false);
+    console.log(stockName.split('('));
+    stockvalue.stockName({"stock_name":stockName.split('(')[0]})
+      .then(res => {
+        console.log('handleStock', res.data);
+      })
+      .catch( (e) => {
+        console.log('handleStock', e);
+      });
   };
 
   const getStatus = (taskID, counter) => {
-
   }
 
   const handleNaver = () => {
-
   };
 
   return (
@@ -170,8 +182,8 @@ export default function StockInfo() {
                   setStockName(newInputValue);
                 }}
                 id="stockname"
-                options={data.corporation}
-                getOptionLabel={(option) => option.stockName}
+                options={corpList}
+                getOptionLabel={(option) => `${option.stock_name}(${option.stock_code})`}
                 style={{ width: 300 }}
                 renderInput={(params) => <TextField {...params} label="종목명" size='medium' variant="outlined"/>}
               />
