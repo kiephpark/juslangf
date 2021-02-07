@@ -275,10 +275,14 @@ export default function StockInfo() {
           console.log("keep trying.")
           setComment(`종목을 분석 중입니다. 잠시만 기다려 주세요.[${counter + 1}]`)
           setTimeout(getStatus, 1000, data['task_id'], counter + 1)
-        }
+        } else{
+	  console.log("Found Failure")
+          setComment(sd.message);
+	}
       })
       .catch( (e) => {
         console.log('handleNaver', e);
+        setComment(sd.message);
       });
   }
 
